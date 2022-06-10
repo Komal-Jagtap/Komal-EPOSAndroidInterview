@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">GithubRepositoryDetails</string>
 
+    <string name="image_desc">Image</string>
     <string name="repository_name">Repository Name</string>
     <string name="repository_language">Repository Language</string>
     <string name="forks">Forks</string>
