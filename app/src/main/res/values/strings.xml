@@ -6,6 +6,6 @@
     <string name="repository_language">Repository Language</string>
     <string name="forks">Forks</string>
     <string name="issues">Issues</string>
-    <string name="starredby">Starred by</string>
+    <string name="starredby">Starred bys</string>
     <string name="internet_connection">Internet Connection Not Available</string>
 </resources>

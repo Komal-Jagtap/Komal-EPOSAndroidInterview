@@ -8,29 +8,51 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.example.githubrepositorydetails.databinding.ActivityMainBinding
 import com.example.githubrepositorydetails.model.GitHubDataHolder
-import com.example.githubrepositorydetails.interfaces.ApiInterface
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.githubrepositorydetails.retrofitwebservices.GetGithubDataRetrofitWebservice
+import com.example.githubrepositorydetails.retrofitwebservices.GithubRepository
+import com.example.githubrepositorydetails.viewmodel.GithubViewModel
+import com.example.githubrepositorydetails.viewmodel.GihubDataViewModelFactory
 
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    lateinit var viewModel: GithubViewModel
+    private val retrofitService = GetGithubDataRetrofitWebservice.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+
+        viewModel =
+            ViewModelProvider(this, GihubDataViewModelFactory(GithubRepository(retrofitService))).get(
+                GithubViewModel::class.java
+            )
+
+
+        viewModel.githubdataList.observe(this, Observer {
+            Log.d("TAG", "onCreate: $it")
+            if (it != null) {
+                setUI(it)
+            }
+        })
+
+        viewModel.errorMessage.observe(this, Observer {
+
+        })
+
+        /*if internet connection available call getGetHubData function */
         if (checkForInternet(this)) {
             binding.relMain.visibility = View.VISIBLE
             binding.relInternet.visibility = View.GONE
-            getGithubRepository(this)
+            viewModel.getGetHubData()
         } else {
             binding.relMain.visibility = View.GONE
             binding.relInternet.visibility = View.VISIBLE
@@ -38,56 +60,42 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getGithubRepository(mainActivity: MainActivity) {
-        val apiInterface = ApiInterface.create().getGithubRepository()
-        apiInterface.enqueue(object : Callback<List<GitHubDataHolder>> {
-            override fun onResponse(
-                call: Call<List<GitHubDataHolder>>?,
-                response: Response<List<GitHubDataHolder>>?
-            ) {
-                Log.d("TAG", "@@@@ Respose:$response")
-                if (response != null) {
-                    Log.d("res", response.body().toString())
-                    val items = response.body()
-                    if (items != null) {
-                        for (i in 0 until items.count()) {
-                            val name = items[i].name
+    /*Set Value to UI*/
+    private fun setUI(it: List<GitHubDataHolder>) {
+        val items = it
+        for (i in 0 until items.count()) {
+            val name = items[i].name
 
-                            if (name == "facebook-android-sdk") {
-                                val id = items[i].id
-                                val owner = items[i].owner
-                                val avatarurl = owner.component1()
-                                val forkscount = items[i].forks_count
-                                val openissuescount = items[i].open_issues_count
-                                val language = items[i].language
-                                Log.d(
-                                    "TAG",
-                                    "ID: $id name:$name language:$language forks_count:$forkscount avatar_url:$avatarurl"
-                                )
+            if (name == "facebook-android-sdk") {
+                val id = items[i].id
+                val owner = items[i].owner
+                val avatarurl = owner.component1()
+                val forkscount = items[i].forks_count
+                val openissuescount = items[i].open_issues_count
+                val language = items[i].language
+                Log.d(
+                    "TAG",
+                    "ID: $id name:$name language:$language forks_count:$forkscount avatar_url:$avatarurl"
+                )
 
-                                binding.tvRepositoryName.setText(name)
-                                binding.tvForksValue.setText(forkscount)
-                                binding.tvRepositoryLanguage.setText(language)
-                                binding.tvIssuesValue.setText(openissuescount)
+                binding.tvRepositoryName.setText(name)
+                binding.tvForksValue.setText(forkscount)
+                binding.tvRepositoryLanguage.setText(language)
+                binding.tvIssuesValue.setText(openissuescount)
 
-                                Log.d("TAG", "owner: $avatarurl")
+                Log.d("TAG", "owner: $avatarurl")
 
-                                Glide.with(mainActivity)
-                                    .load(avatarurl)
-                                    .into(binding.ivRepositoryLogo)
-                                break
-                            }
-                        }
-                    }
-                }
+                Glide.with(this)
+                    .load(avatarurl)
+                    .into(binding.ivRepositoryLogo)
+                break
             }
+        }
 
-            override fun onFailure(call: Call<List<GitHubDataHolder>>?, t: Throwable?) {
-
-            }
-        })
     }
 
+
+    /*Check InternetConnection*/
     private fun checkForInternet(context: Context): Boolean {
 
         // register activity with the connectivity manager service
@@ -105,7 +113,8 @@ class MainActivity : AppCompatActivity() {
             val network = connectivityManager.activeNetwork ?: return false
 
             // Representation of the capabilities of an active network.
-            val activeNetwork = connectivityManager.getNetworkCapabilities(network) ?: return false
+            val activeNetwork =
+                connectivityManager.getNetworkCapabilities(network) ?: return false
 
             return when {
                 // Indicates this network uses a Wi-Fi transport,
