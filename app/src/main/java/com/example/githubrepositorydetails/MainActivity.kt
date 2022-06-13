@@ -17,6 +17,14 @@ import com.example.githubrepositorydetails.retrofitwebservices.GetGithubDataRetr
 import com.example.githubrepositorydetails.retrofitwebservices.GithubRepository
 import com.example.githubrepositorydetails.viewmodel.GithubViewModel
 import com.example.githubrepositorydetails.viewmodel.GihubDataViewModelFactory
+import android.view.WindowManager
+
+import android.app.Activity
+
+import android.app.ProgressDialog
+
+
+
 
 
 class MainActivity : AppCompatActivity() {
@@ -24,6 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     lateinit var viewModel: GithubViewModel
     private val retrofitService = GetGithubDataRetrofitWebservice.getInstance()
+    lateinit var mProgressDialog :ProgressDialog;
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +49,8 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.githubdataList.observe(this, Observer {
             Log.d("TAG", "onCreate: $it")
+
+            hideDialog()
             if (it != null) {
                 setUI(it)
             }
@@ -46,6 +58,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.errorMessage.observe(this, Observer {
 
+            hideDialog()
         })
 
         /*if internet connection available call getGetHubData function */
@@ -53,6 +66,7 @@ class MainActivity : AppCompatActivity() {
             binding.relMain.visibility = View.VISIBLE
             binding.relInternet.visibility = View.GONE
             viewModel.getGetHubData()
+            showDialog(this)
         } else {
             binding.relMain.visibility = View.GONE
             binding.relInternet.visibility = View.VISIBLE
@@ -136,4 +150,24 @@ class MainActivity : AppCompatActivity() {
             return networkInfo.isConnected
         }
     }
+
+    fun showDialog(context: Context)
+    {
+         mProgressDialog = ProgressDialog(context)
+        (context as Activity).window.setFlags(
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+        )
+        mProgressDialog.setIndeterminate(true)
+        mProgressDialog.setMessage("Loading...")
+        mProgressDialog.setCanceledOnTouchOutside(false)
+        mProgressDialog.show()
+
+    }
+
+
+    fun hideDialog() {
+        if (mProgressDialog.isShowing) mProgressDialog.dismiss()
+    }
+
 }
