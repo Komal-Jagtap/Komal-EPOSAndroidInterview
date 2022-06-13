@@ -87,6 +87,8 @@ class MainActivity : AppCompatActivity() {
                 val forkscount = items[i].forks_count
                 val openissuescount = items[i].open_issues_count
                 val language = items[i].language
+                val Starredby = items[i].stargazers_count
+
                 Log.d(
                     "TAG",
                     "ID: $id name:$name language:$language forks_count:$forkscount avatar_url:$avatarurl"
@@ -96,8 +98,7 @@ class MainActivity : AppCompatActivity() {
                 binding.tvForksValue.setText(forkscount)
                 binding.tvRepositoryLanguage.setText(language)
                 binding.tvIssuesValue.setText(openissuescount)
-
-                Log.d("TAG", "owner: $avatarurl")
+                binding.tvStarredbyValue.setText(Starredby)
 
                 Glide.with(this)
                     .load(avatarurl)
